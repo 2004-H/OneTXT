@@ -1,0 +1,133 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom subtle scrollbars for drawers and editors */
+.onetxt-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.onetxt-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.onetxt-scroll::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.28);
+  border-radius: 9999px;
+}
+
+.onetxt-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.48);
+}
+
+/* Base layout structure for code blocks inside prose */
+.onetxt-prose .onetxt-code-wrap {
+  position: relative;
+  margin: 1.5em 0;
+  overflow: hidden;
+}
+
+.onetxt-prose .onetxt-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0.75rem 0.45rem 1rem;
+  font-size: 0.75rem;
+  user-select: none;
+}
+
+.onetxt-prose .onetxt-code-lang {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  opacity: 0.72;
+}
+
+.onetxt-prose .onetxt-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.65rem;
+  min-height: 30px;
+  border-radius: 6px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: transform 120ms cubic-bezier(0.16, 1, 0.3, 1), opacity 150ms ease, background-color 150ms ease;
+}
+
+.onetxt-prose .onetxt-copy-btn:active {
+  transform: scale(0.96);
+}
+
+.onetxt-prose .onetxt-copy-btn[data-copied="true"] {
+  border-color: rgba(52, 211, 153, 0.45);
+}
+
+.onetxt-prose pre {
+  margin: 0 !important;
+  overflow-x: auto;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+.onetxt-prose pre code {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  font-size: inherit !important;
+  color: inherit !important;
+}
+
+.onetxt-prose ul.contains-task-list {
+  list-style: none;
+  padding-left: 0.25rem;
+}
+
+.onetxt-prose li.task-list-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+}
+
+.onetxt-prose li.task-list-item input[type="checkbox"] {
+  accent-color: currentColor;
+  width: 0.95rem;
+  height: 0.95rem;
+  transform: translateY(1px);
+  cursor: pointer;
+}
+
+.onetxt-prose .onetxt-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin: 1.5em 0;
+}
+
+.onetxt-prose h1,
+.onetxt-prose h2,
+.onetxt-prose h3,
+.onetxt-prose h4,
+.onetxt-prose h5,
+.onetxt-prose h6 {
+  scroll-margin-top: 1.5rem;
+}

@@ -1,0 +1,6 @@
+{
+  "name": "OneTXT",
+  "description": "A long-form Markdown document studio with live per-heading CSS theming, outline navigation, single-tap code copy, and portable backups.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

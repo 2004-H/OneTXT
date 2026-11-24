@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OneTXT Field Guide — OneTXT</title>
+<style id="onetxt-base-css">
+  *, *::before, *::after { box-sizing: border-box; }
+  :root {
+    --ui-bg: #FAF9F6;
+    --ui-surface: #FFFFFF;
+    --ui-text: #1E1F23;
+    --ui-muted: #646873;
+    --ui-accent: #2563EB;
+    --ui-border: rgba(0,0,0,0.09);
+  }
+  html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+  body {
+    margin: 0;
+    background: var(--ui-bg);
+    color: var(--ui-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding-bottom: 84px;
+  }
+  .topbar {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 20px 24px 12px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid var(--ui-border);
+  }
+  .doc-title-input {
+    background: transparent;
+    border: none;
+    color: var(--ui-text);
+    font-size: 1.05rem;
+    font-weight: 600;
+    padding: 4px 0;
+    min-width: 220px;
+    outline: none;
+  }
+  .doc-stats {
+    font-size: 0.78rem;
+    color: var(--ui-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .main-wrap {
+    padding: 44px 32px;
+  }
+  .source-wrap {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+  #source-editor {
+    width: 100%;
+    min-height: 72vh;
+    background: var(--ui-surface);
+    color: var(--ui-text);
+    border: 1px solid var(--ui-border);
+    border-radius: 10px;
+    padding: 20px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.65;
+    resize: vertical;
+    outline: none;
+  }
+  .onetxt-prose .onetxt-code-wrap { position: relative; margin: 1.5em 0; overflow: hidden; }
+  .onetxt-prose .onetxt-code-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 10px 7px 14px; font-size: 12px;
+  }
+  .onetxt-prose .onetxt-code-lang { font-family: ui-monospace, monospace; opacity: 0.72; }
+  .onetxt-prose .onetxt-copy-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; min-height: 28px; border-radius: 6px;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.16);
+  }
+  .onetxt-prose pre { margin: 0 !important; overflow-x: auto; border: none !important; }
+  .onetxt-prose pre code { background: transparent !important; padding: 0 !important; color: inherit !important; }
+  .onetxt-prose .onetxt-table-wrap { width: 100%; overflow-x: auto; margin: 1.4em 0; }
+  .bottom-dock {
+    position: fixed; bottom: 0; left: 0; right: 0; height: 56px; z-index: 40;
+    background: var(--ui-surface);
+    border-top: 1px solid var(--ui-border);
+    display: flex; justify-content: center;
+  }
+  .bottom-grid {
+    width: 100%; max-width: 520px;
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    height: 100%;
+  }
+  .dock-btn {
+    background: transparent; border: none; color: var(--ui-muted);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; font-size: 11px; font-weight: 600; cursor: pointer;
+  }
+  .dock-btn.active { color: var(--ui-accent); }
+  .drawer-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.42); z-index: 50; display: none;
+  }
+  .drawer-backdrop.open { display: block; }
+  .drawer {
+    position: fixed; top: 0; bottom: 0; right: 0; width: min(440px, 100vw);
+    background: var(--ui-surface); color: var(--ui-text);
+    border-left: 1px solid var(--ui-border); z-index: 60;
+    transform: translateX(100%); transition: transform 180ms cubic-bezier(0.16,1,0.3,1);
+    display: flex; flex-direction: column;
+  }
+  .drawer.left { right: auto; left: 0; border-left: none; border-right: 1px solid var(--ui-border); transform: translateX(-100%); width: min(340px, 100vw); }
+  .drawer.open { transform: translateX(0); }
+  .drawer-head {
+    padding: 16px 18px; border-bottom: 1px solid var(--ui-border);
+    display: flex; align-items: center; justify-content: space-between; font-weight: 600;
+  }
+  .drawer-body { padding: 16px 18px; overflow-y: auto; flex: 1; }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .ui-btn {
+    padding: 8px 12px; border-radius: 7px; border: 1px solid var(--ui-border);
+    background: var(--ui-bg); color: var(--ui-text); font-size: 12.5px; font-weight: 500; cursor: pointer;
+  }
+  .ui-btn.primary { background: var(--ui-accent); color: #fff; border-color: transparent; }
+  .toc-item {
+    display: block; width: 100%; text-align: left; background: transparent; border: none;
+    color: var(--ui-text); padding: 7px 8px; border-radius: 6px; cursor: pointer; font-size: 13.5px;
+  }
+  .toc-item:hover { background: var(--ui-bg); }
+  .field-label { display: block; font-size: 12px; color: var(--ui-muted); margin: 10px 0 4px; }
+  .field-input, .field-select, .field-textarea {
+    width: 100%; padding: 8px 10px; border-radius: 7px;
+    border: 1px solid var(--ui-border); background: var(--ui-bg); color: var(--ui-text);
+    font-size: 13px;
+  }
+  .field-textarea { min-height: 120px; font-family: ui-monospace, monospace; font-size: 12px; }
+  .hidden { display: none !important; }
+</style>
+<style id="onetxt-theme-css">.onetxt-prose {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px;
+  line-height: 1.72;
+  color: #1E1F23;
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+  word-wrap: break-word;
+}
+
+.onetxt-prose > *:first-child {
+  margin-top: 0;
+}
+
+.onetxt-prose h1 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 2.5rem;
+  font-weight: 600;
+  line-height: 1.14;
+  letter-spacing: -0.03em;
+  text-transform: none;
+  font-style: normal;
+  text-align: left;
+  color: #111215;
+  background-color: transparent;
+  padding: 0px 0px 14px 0px;
+  margin-top: 0.4em;
+  margin-bottom: 0.65em;
+  border: none; border-bottom: 1px solid #E5E4DF;
+  border-radius: 0px;
+  text-wrap: balance;
+}
+
+.onetxt-prose h2 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  font-style: normal;
+  text-align: left;
+  color: #18191D;
+  background-color: transparent;
+  padding: 0px 0px 8px 0px;
+  margin-top: 2.1em;
+  margin-bottom: 0.55em;
+  border: none; border-bottom: 1px solid #ECEBE6;
+  border-radius: 0px;
+  text-wrap: balance;
+}
+
+.onetxt-prose h3 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.28rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  text-transform: none;
+  font-style: normal;
+  text-align: left;
+  color: #1E1F23;
+  background-color: transparent;
+  padding: 0px 0px 0px 0px;
+  margin-top: 1.65em;
+  margin-bottom: 0.45em;
+  border: none;
+  border-radius: 0px;
+  text-wrap: balance;
+}
+
+.onetxt-prose h4 {
+  font-family: inherit;
+  font-size: 1.08rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  font-style: normal;
+  text-align: left;
+  color: #2C2E35;
+  background-color: transparent;
+  padding: 0px 0px 0px 0px;
+  margin-top: 1.4em;
+  margin-bottom: 0.4em;
+  border: none;
+  border-radius: 0px;
+  text-wrap: balance;
+}
+
+.onetxt-prose h5 {
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-style: normal;
+  text-align: left;
+  color: #4B505C;
+  background-color: transparent;
+  padding: 0px 0px 0px 0px;
+  margin-top: 1.25em;
+  margin-bottom: 0.35em;
+  border: none;
+  border-radius: 0px;
+  text-wrap: balance;
+}
+
+.onetxt-prose h6 {
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  font-style: italic;
+  text-align: left;
+  color: #646873;
+  background-color: transparent;
+  padding: 0px 0px 0px 0px;
+  margin-top: 1.1em;
+  margin-bottom: 0.3em;
+  border: none;
+  border-radius: 0px;
+  text-wrap: balance;
+}
+
+.onetxt-prose p {
+  font-size: 1em;
+  line-height: 1.74;
+  color: #1E1F23;
+  margin-top: 0;
+  margin-bottom: 1.15em;
+  text-indent: 0em;
+  
+}
+
+.onetxt-prose blockquote {
+  color: #3F424D;
+  background-color: #F3F2EE;
+  border: 1px solid #DCDAD3;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 1.5em 0;
+  font-style: italic;
+  
+}
+
+.onetxt-prose blockquote > p:last-child {
+  margin-bottom: 0;
+}
+
+.onetxt-prose :not(pre) > code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  color: #1D4ED8;
+  background-color: #EFF3F9;
+  border-radius: 5px;
+  padding: 2px 6px;
+  font-size: 0.875em;
+  border: 1px solid #DCE5F2;
+  
+}
+
+.onetxt-prose .onetxt-code-wrap {
+  background-color: #14171D;
+  border: 1px solid #262B36;
+  border-radius: 10px;
+  
+}
+
+.onetxt-prose .onetxt-code-header {
+  background-color: #1C2029;
+  border-bottom: 1px solid #262B36;
+  color: #E5E9F0;
+}
+
+.onetxt-prose .onetxt-copy-btn {
+  color: #E5E9F0;
+  background-color: #272D3A;
+}
+
+.onetxt-prose .onetxt-copy-btn:hover {
+  filter: brightness(1.12);
+}
+
+.onetxt-prose pre {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  color: #E5E9F0;
+  background-color: #14171D;
+  font-size: 0.875rem;
+  line-height: 1.62;
+  padding: 16px 18px;
+}
+
+.onetxt-prose a {
+  color: #2563EB;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 500;
+  transition: opacity 150ms ease;
+  
+}
+
+.onetxt-prose a:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+.onetxt-prose ul,
+.onetxt-prose ol {
+  padding-left: 1.45em;
+  margin: 0 0 1.15em 0;
+  
+}
+
+.onetxt-prose ul {
+  list-style-type: disc;
+}
+
+.onetxt-prose ol {
+  list-style-type: decimal;
+}
+
+.onetxt-prose li {
+  margin-bottom: 0.4em;
+}
+
+.onetxt-prose li::marker {
+  color: #646873;
+}
+
+.onetxt-prose li > ul,
+.onetxt-prose li > ol {
+  margin-top: 0.4em;
+  margin-bottom: 0.25em;
+}
+
+.onetxt-prose .onetxt-table-wrap {
+  border: 1px solid #E2E0D8;
+  border-radius: 8px;
+}
+
+.onetxt-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.94em;
+  font-variant-numeric: tabular-nums;
+  
+}
+
+.onetxt-prose th {
+  background-color: #F2F1EC;
+  color: #18191D;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid #E2E0D8;
+}
+
+.onetxt-prose td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #E2E0D8;
+}
+
+.onetxt-prose tr:last-child td {
+  border-bottom: none;
+}
+
+.onetxt-prose tbody tr:nth-child(even) td {
+  background-color: #F8F7F4;
+}
+
+.onetxt-prose hr {
+  border: none;
+  border-top: 1px solid #E2E0D8;
+  margin-top: 2.25em;
+  margin-bottom: 2.25em;
+  width: 100%;
+  
+}
+
+.onetxt-prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.1);
+  margin: 1.5em auto;
+  
+}
+
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <input id="doc-title" class="doc-title-input" type="text" value="OneTXT Field Guide" aria-label="Document title" />
+    <div id="doc-stats" class="doc-stats"></div>
+  </header>
+
+  <main class="main-wrap">
+    <article id="read-view" class="onetxt-prose"></article>
+    <div id="source-view" class="source-wrap hidden">
+      <textarea id="source-editor" spellcheck="true" aria-label="Markdown source editor"></textarea>
+    </div>
+  </main>
+
+  <div id="backdrop" class="drawer-backdrop"></div>
+
+  <aside id="outline-drawer" class="drawer left" aria-label="Table of Contents">
+    <div class="drawer-head">
+      <span>Outline</span>
+      <button class="ui-btn" id="close-outline" type="button">Close</button>
+    </div>
+    <div id="toc-list" class="drawer-body"></div>
+  </aside>
+
+  <aside id="settings-drawer" class="drawer" aria-label="Settings and Theme Studio">
+    <div class="drawer-head">
+      <span>Settings &amp; Theme</span>
+      <button class="ui-btn" id="close-settings" type="button">Close</button>
+    </div>
+    <div class="drawer-body">
+      <label class="field-label" for="heading-select">Header Level to Style</label>
+      <select id="heading-select" class="field-select">
+        <option value="h1">H1</option><option value="h2">H2</option><option value="h3">H3</option>
+        <option value="h4">H4</option><option value="h5">H5</option><option value="h6">H6</option>
+      </select>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div><label class="field-label">Font Size</label><input id="h-size" class="field-input" /></div>
+        <div><label class="field-label">Color</label><input id="h-color" class="field-input" type="color" style="height:36px;padding:2px;" /></div>
+      </div>
+      <label class="field-label">Custom CSS for Selected Header</label>
+      <textarea id="h-custom-css" class="field-textarea" style="min-height:72px;"></textarea>
+      <label class="field-label">Global Scoped Custom CSS</label>
+      <textarea id="raw-custom-css" class="field-textarea"></textarea>
+      <div class="btn-row" style="margin-top:14px;">
+        <button id="btn-export-md" class="ui-btn" type="button">Backup Text (.md)</button>
+        <button id="btn-export-theme" class="ui-btn" type="button">Backup Theme (.json)</button>
+        <button id="btn-export-full" class="ui-btn primary" type="button">Full Backup (.json)</button>
+        <button id="btn-export-html" class="ui-btn" type="button">Save OneTXT.html</button>
+      </div>
+      <label class="field-label">Restore Backup (.md / .txt / .json)</label>
+      <input id="import-file" type="file" accept=".md,.txt,.json" class="field-input" />
+    </div>
+  </aside>
+
+  <nav class="bottom-dock" aria-label="Document Navigation">
+    <div class="bottom-grid">
+      <button id="nav-mode" class="dock-btn active" type="button">Source / Read</button>
+      <button id="nav-outline" class="dock-btn" type="button">Outline</button>
+      <button id="nav-settings" class="dock-btn" type="button">Settings</button>
+    </div>
+  </nav>
+
+  <script id="onetxt-state" type="application/json">{"title":"OneTXT Field Guide","content":"# OneTXT Long-Form Document Studio\n\nWelcome to **OneTXT** — a portable, single-document Markdown workspace built for long-form writing, technical specifications, personal wikis, and structured reading. Everything you write is saved automatically in your browser, and you can export your text, CSS theme, or a complete self-contained `OneTXT.html` file anytime.\n\n\u003e Good typography is invisible until it breaks; great document tooling lets you shape every heading level to match the structure of your thought.\n\n---\n\n## Navigation \u0026 Core Controls\n\nUse the three anchored controls along the bottom bar to move effortlessly across long documents:\n\n1. **Source / Read** — Flip instantaneously between rendered typography and raw Markdown editing.\n2. **Outline** — Inspect the hierarchical table of contents (`H1` through `H6`) and jump directly to any section.\n3. **Settings** — Customize per-heading CSS rules, markdown block styles, theme presets, and portable backups.\n\n### Quick Checklist for New Documents\n\n- [x] Write or paste long-form Markdown in Source Mode\n- [x] Open Outline to verify heading hierarchy across sections\n- [ ] Style `H1`–`H6`, code blocks, and quotes in Settings → Markdown CSS\n- [ ] Export a Full Backup or standalone `OneTXT.html` snapshot\n\n---\n\n## Code Blocks with Single-Tap Copy\n\nEvery fenced code block includes a dedicated **Copy** button in the top-right corner. Tap or click once to copy the block straight to your clipboard.\n\n```typescript\ninterface DocumentSection {\n  id: string;\n  level: 1 | 2 | 3 | 4 | 5 | 6;\n  heading: string;\n  wordCount: number;\n}\n\nexport function buildOutlineIndex(markdown: string): DocumentSection[] {\n  const lines = markdown.split('\\n');\n  return lines\n    .map((line, index) =\u003e {\n      const match = /^(#{1,6})\\s+(.+)$/.exec(line.trim());\n      if (!match) return null;\n      return {\n        id: `section-${index}`,\n        level: match[1].length as DocumentSection['level'],\n        heading: match[2].trim(),\n        wordCount: 0,\n      };\n    })\n    .filter((item): item is DocumentSection =\u003e item !== null);\n}\n```\n\n### Styling Headers with Custom CSS\n\nIn **Settings → Markdown CSS**, select any header level (`H1` through `H6`) to configure its font family, size, weight, letter spacing, color, background, padding, margins, borders, or raw CSS rules.\n\n```css\n/* Example custom CSS you can paste into Settings -\u003e Raw CSS */\nh2 {\n  background: linear-gradient(90deg, rgba(37, 99, 235, 0.08), transparent);\n  padding: 0.45rem 0.75rem;\n  border-radius: 6px;\n}\n\nblockquote p:last-child {\n  margin-bottom: 0;\n}\n```\n\n#### Level 4 Heading: Structured Reference Tables\n\nTables support clean alignment, optional zebra striping, and customizable borders:\n\n| Element | Default Shortcut / Syntax | Customizable Properties |\n| :--- | :--- | :--- |\n| Headings `H1–H6` | `#` through `######` | Font, Size, Color, Background, Borders, Custom CSS |\n| Inline Code | Backticks `\\`code\\`` | Text Color, Surface Fill, Radius, Padding |\n| Code Block | Triple backticks `\\`\\`\\`` | Palette, Header Bar, Copy Button, Line Height |\n| Blockquote | Leading `\u003e` | Italic Style, Border Side, Padding, Background |\n| Hyperlinks | `[label](url)` | Color, Underline Mode, Offset, Weight |\n\n##### Level 5 Heading: Shell \u0026 Backup Workflows\n\nYou can export three distinct backup tiers from **Settings → Backup \u0026 Restore**:\n\n```bash\n# Text Backup (.md / .txt)   -\u003e Portable plain Markdown content\n# Theme Backup (.json / .css) -\u003e Shareable heading \u0026 element styles\n# Full Backup (.json / .html) -\u003e Complete document + theme + standalone OneTXT.html\n```\n\n###### Level 6 Heading: Archival Notes\n\nEven deeply nested `H6` headings appear accurately in your Outline drawer and respond to independent CSS rules, making it practical to maintain book-length manuals, architectural decision records, and research journals inside a single document.\n","theme":{"id":"swiss-monograph","name":"Swiss Monograph","isDarkUI":false,"pageBg":"#FAF9F6","surfaceBg":"#FFFFFF","textColor":"#1E1F23","mutedColor":"#646873","accentColor":"#2563EB","bodyFont":"'Plus Jakarta Sans', sans-serif","monoFont":"'JetBrains Mono', ui-monospace, monospace","baseFontSize":16,"baseLineHeight":1.72,"maxWidth":760,"contentPaddingX":32,"contentPaddingY":44,"headings":{"h1":{"fontFamily":"'Fraunces', Georgia, serif","fontSize":"2.5rem","fontWeight":"600","lineHeight":"1.14","letterSpacing":"-0.03em","textTransform":"none","fontStyle":"normal","textAlign":"left","color":"#111215","backgroundColor":"transparent","paddingTop":"0px","paddingBottom":"14px","paddingLeft":"0px","paddingRight":"0px","marginTop":"0.4em","marginBottom":"0.65em","borderWidth":"1px","borderSide":"bottom","borderStyle":"solid","borderColor":"#E5E4DF","borderRadius":"0px","customCss":""},"h2":{"fontFamily":"'Fraunces', Georgia, serif","fontSize":"1.75rem","fontWeight":"600","lineHeight":"1.22","letterSpacing":"-0.02em","textTransform":"none","fontStyle":"normal","textAlign":"left","color":"#18191D","backgroundColor":"transparent","paddingTop":"0px","paddingBottom":"8px","paddingLeft":"0px","paddingRight":"0px","marginTop":"2.1em","marginBottom":"0.55em","borderWidth":"1px","borderSide":"bottom","borderStyle":"solid","borderColor":"#ECEBE6","borderRadius":"0px","customCss":""},"h3":{"fontFamily":"'Plus Jakarta Sans', sans-serif","fontSize":"1.28rem","fontWeight":"700","lineHeight":"1.3","letterSpacing":"-0.015em","textTransform":"none","fontStyle":"normal","textAlign":"left","color":"#1E1F23","backgroundColor":"transparent","paddingTop":"0px","paddingBottom":"0px","paddingLeft":"0px","paddingRight":"0px","marginTop":"1.65em","marginBottom":"0.45em","borderWidth":"0px","borderSide":"none","borderStyle":"solid","borderColor":"#E4E4E7","borderRadius":"0px","customCss":""},"h4":{"fontFamily":"inherit","fontSize":"1.08rem","fontWeight":"600","lineHeight":"1.25","letterSpacing":"-0.01em","textTransform":"none","fontStyle":"normal","textAlign":"left","color":"#2C2E35","backgroundColor":"transparent","paddingTop":"0px","paddingBottom":"0px","paddingLeft":"0px","paddingRight":"0px","marginTop":"1.4em","marginBottom":"0.4em","borderWidth":"0px","borderSide":"none","borderStyle":"solid","borderColor":"#E4E4E7","borderRadius":"0px","customCss":""},"h5":{"fontFamily":"inherit","fontSize":"0.94rem","fontWeight":"700","lineHeight":"1.25","letterSpacing":"0.04em","textTransform":"uppercase","fontStyle":"normal","textAlign":"left","color":"#4B505C","backgroundColor":"transparent","paddingTop":"0px","paddingBottom":"0px","paddingLeft":"0px","paddingRight":"0px","marginTop":"1.25em","marginBottom":"0.35em","borderWidth":"0px","borderSide":"none","borderStyle":"solid","borderColor":"#E4E4E7","borderRadius":"0px","customCss":""},"h6":{"fontFamily":"inherit","fontSize":"0.88rem","fontWeight":"600","lineHeight":"1.25","letterSpacing":"0.01em","textTransform":"none","fontStyle":"italic","textAlign":"left","color":"#646873","backgroundColor":"transparent","paddingTop":"0px","paddingBottom":"0px","paddingLeft":"0px","paddingRight":"0px","marginTop":"1.1em","marginBottom":"0.3em","borderWidth":"0px","borderSide":"none","borderStyle":"solid","borderColor":"#E4E4E7","borderRadius":"0px","customCss":""}},"elements":{"paragraph":{"fontSize":"1em","lineHeight":"1.74","color":"#1E1F23","marginBottom":"1.15em","textIndent":"0em","customCss":""},"blockquote":{"color":"#3F424D","backgroundColor":"#F3F2EE","borderColor":"#DCDAD3","borderWidth":"1px","borderSide":"all","borderRadius":"10px","padding":"16px 20px","marginY":"1.5em","fontStyle":"italic","customCss":""},"inlineCode":{"color":"#1D4ED8","backgroundColor":"#EFF3F9","borderRadius":"5px","paddingX":"6px","paddingY":"2px","fontSize":"0.875em","borderColor":"#DCE5F2","customCss":""},"codeBlock":{"color":"#E5E9F0","backgroundColor":"#14171D","headerBg":"#1C2029","borderColor":"#262B36","borderRadius":"10px","fontSize":"0.875rem","lineHeight":"1.62","padding":"16px 18px","copyBtnColor":"#E5E9F0","copyBtnBg":"#272D3A","customCss":""},"link":{"color":"#2563EB","underlineMode":"always","underlineOffset":"3px","fontWeight":"500","customCss":""},"list":{"markerColor":"#646873","itemSpacing":"0.4em","indent":"1.45em","customCss":""},"table":{"headerBg":"#F2F1EC","headerColor":"#18191D","borderColor":"#E2E0D8","rowAltBg":"#F8F7F4","striped":true,"cellPadding":"10px 14px","borderRadius":"8px","customCss":""},"hr":{"color":"#E2E0D8","thickness":"1px","style":"solid","marginY":"2.25em","width":"100%","customCss":""},"image":{"borderRadius":"10px","maxWidth":"100%","shadow":"subtle","customCss":""}},"rawCustomCss":""},"preferences":{"showLineNumbers":true,"editorFontSize":14,"spellCheck":true,"wordWrap":true}}</script>
+  <script>
+    (function() {
+      var STORAGE_KEY = 'onetxt_standalone_' + (document.title || 'doc');
+      var initial = JSON.parse(document.getElementById('onetxt-state').textContent);
+      var saved = null;
+      try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch(e) {}
+      var state = saved && saved.content !== undefined ? saved : initial;
+      var mode = 'read';
+
+      var readEl = document.getElementById('read-view');
+      var sourceWrap = document.getElementById('source-view');
+      var editorEl = document.getElementById('source-editor');
+      var titleEl = document.getElementById('doc-title');
+      var statsEl = document.getElementById('doc-stats');
+      var tocEl = document.getElementById('toc-list');
+      var themeStyleEl = document.getElementById('onetxt-theme-css');
+
+      function esc(s) {
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+
+      function inlineMd(s) {
+        var out = esc(s);
+        out = out.replace(/`([^`]+)`/g, function(_, c){ return '<code>' + c + '</code>'; });
+        out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        out = out.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+        out = out.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+        out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+        return out;
+      }
+
+      function renderMd(md) {
+        var lines = md.split(/\r?\n/);
+        var html = [], toc = [], i = 0, hCount = 0;
+        while (i < lines.length) {
+          var line = lines[i];
+          var fence = /^\s*```(.*)$/.exec(line);
+          if (fence) {
+            var lang = (fence[1] || '').trim() || 'text';
+            var code = []; i++;
+            while (i < lines.length && !/^\s*```/.test(lines[i])) { code.push(lines[i]); i++; }
+            html.push('<div class="onetxt-code-wrap"><div class="onetxt-code-header"><span class="onetxt-code-lang">' + esc(lang) + '</span><button type="button" class="onetxt-copy-btn" data-copy-code="true">Copy</button></div><pre><code>' + esc(code.join('\n')) + '</code></pre></div>');
+            i++; continue;
+          }
+          var hm = /^\s{0,3}(#{1,6})\s+(.+)$/.exec(line);
+          if (hm) {
+            var lvl = hm[1].length, id = 'onetxt-h-' + hCount++;
+            toc.push({ id: id, level: lvl, text: hm[2].trim(), line: i + 1 });
+            html.push('<h' + lvl + ' id="' + id + '">' + inlineMd(hm[2].trim()) + '</h' + lvl + '>');
+            i++; continue;
+          }
+          if (/^\s*(---+|\*\*\*+)\s*$/.test(line)) { html.push('<hr />'); i++; continue; }
+          if (/^\s*>/.test(line)) {
+            var bq = [];
+            while (i < lines.length && /^\s*>/.test(lines[i])) { bq.push(lines[i].replace(/^\s*>\s?/, '')); i++; }
+            html.push('<blockquote><p>' + inlineMd(bq.join(' ')) + '</p></blockquote>');
+            continue;
+          }
+          if (/^\s*[-*+]\s+/.test(line)) {
+            var ul = [];
+            while (i < lines.length && /^\s*[-*+]\s+/.test(lines[i])) { ul.push('<li>' + inlineMd(lines[i].replace(/^\s*[-*+]\s+/, '')) + '</li>'); i++; }
+            html.push('<ul>' + ul.join('') + '</ul>'); continue;
+          }
+          if (/^\s*\d+\.\s+/.test(line)) {
+            var ol = [];
+            while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) { ol.push('<li>' + inlineMd(lines[i].replace(/^\s*\d+\.\s+/, '')) + '</li>'); i++; }
+            html.push('<ol>' + ol.join('') + '</ol>'); continue;
+          }
+          if (line.trim() === '') { i++; continue; }
+          var p = [];
+          while (i < lines.length && lines[i].trim() !== '' && !/^\s*(#{1,6}\s|```|>|[-*+]\s|\d+\.\s|---)/.test(lines[i])) {
+            p.push(lines[i]); i++;
+          }
+          html.push('<p>' + inlineMd(p.join(' ')) + '</p>');
+        }
+        return { html: html.join('\n'), toc: toc };
+      }
+
+      function applyThemeCss() {
+        var css = [];
+        ['h1','h2','h3','h4','h5','h6'].forEach(function(tag) {
+          var h = state.theme.headings[tag];
+          if (!h) return;
+          css.push('.onetxt-prose ' + tag + ' { font-size:' + h.fontSize + '; color:' + h.color + '; ' + (h.customCss || '') + ' }');
+        });
+        if (state.theme.rawCustomCss) css.push(state.theme.rawCustomCss);
+        themeStyleEl.textContent = initial.themeCssOverride || (themeStyleEl.dataset.base || themeStyleEl.textContent) + '\n' + css.join('\n');
+      }
+      themeStyleEl.dataset.base = themeStyleEl.textContent;
+
+      function syncAll() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+        var res = renderMd(state.content);
+        readEl.innerHTML = res.html;
+        var words = state.content.trim() ? state.content.trim().split(/\s+/).length : 0;
+        statsEl.textContent = words + ' words · ' + Math.max(1, Math.ceil(words/225)) + ' min read';
+        tocEl.innerHTML = res.toc.map(function(item) {
+          return '<button class="toc-item" data-id="' + item.id + '" style="padding-left:' + ((item.level - 1)*14 + 8) + 'px">' + esc(item.text) + '</button>';
+        }).join('') || '<div style="opacity:0.6;font-size:13px;">No headings found.</div>';
+      }
+
+      readEl.addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-copy-code]');
+        if (!btn) return;
+        var wrap = btn.closest('.onetxt-code-wrap');
+        var code = wrap ? wrap.querySelector('pre code') : null;
+        if (!code) return;
+        var txt = code.textContent || '';
+        if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(function(){});
+        btn.textContent = 'Copied';
+        setTimeout(function() { btn.textContent = 'Copy'; }, 1800);
+      });
+
+      tocEl.addEventListener('click', function(e) {
+        var item = e.target.closest('.toc-item');
+        if (!item) return;
+        if (mode !== 'read') setMode('read');
+        var target = document.getElementById(item.dataset.id);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        closeDrawers();
+      });
+
+      function setMode(next) {
+        mode = next;
+        if (mode === 'source') {
+          editorEl.value = state.content;
+          readEl.classList.add('hidden');
+          sourceWrap.classList.remove('hidden');
+          document.getElementById('nav-mode').textContent = 'Read Mode';
+        } else {
+          sourceWrap.classList.add('hidden');
+          readEl.classList.remove('hidden');
+          document.getElementById('nav-mode').textContent = 'Source Mode';
+          syncAll();
+        }
+      }
+
+      function closeDrawers() {
+        document.getElementById('outline-drawer').classList.remove('open');
+        document.getElementById('settings-drawer').classList.remove('open');
+        document.getElementById('backdrop').classList.remove('open');
+      }
+
+      document.getElementById('nav-mode').addEventListener('click', function() {
+        setMode(mode === 'read' ? 'source' : 'read');
+      });
+      document.getElementById('nav-outline').addEventListener('click', function() {
+        closeDrawers();
+        document.getElementById('outline-drawer').classList.add('open');
+        document.getElementById('backdrop').classList.add('open');
+      });
+      document.getElementById('nav-settings').addEventListener('click', function() {
+        closeDrawers();
+        document.getElementById('settings-drawer').classList.add('open');
+        document.getElementById('backdrop').classList.add('open');
+      });
+      document.getElementById('close-outline').addEventListener('click', closeDrawers);
+      document.getElementById('close-settings').addEventListener('click', closeDrawers);
+      document.getElementById('backdrop').addEventListener('click', closeDrawers);
+
+      editorEl.addEventListener('input', function() {
+        state.content = editorEl.value;
+        syncAll();
+      });
+      titleEl.addEventListener('input', function() {
+        state.title = titleEl.value;
+        document.title = (state.title || 'OneTXT') + ' — OneTXT';
+        syncAll();
+      });
+
+      var hSel = document.getElementById('heading-select');
+      var hSize = document.getElementById('h-size');
+      var hColor = document.getElementById('h-color');
+      var hCss = document.getElementById('h-custom-css');
+      var rawCss = document.getElementById('raw-custom-css');
+
+      function loadHeadingControls() {
+        var h = state.theme.headings[hSel.value];
+        hSize.value = h.fontSize;
+        hColor.value = /^#[0-9a-fA-F]{6}$/.test(h.color) ? h.color : '#18181b';
+        hCss.value = h.customCss || '';
+        rawCss.value = state.theme.rawCustomCss || '';
+      }
+      hSel.addEventListener('change', loadHeadingControls);
+      hSize.addEventListener('input', function() { state.theme.headings[hSel.value].fontSize = hSize.value; applyThemeCss(); syncAll(); });
+      hColor.addEventListener('input', function() { state.theme.headings[hSel.value].color = hColor.value; applyThemeCss(); syncAll(); });
+      hCss.addEventListener('input', function() { state.theme.headings[hSel.value].customCss = hCss.value; applyThemeCss(); syncAll(); });
+      rawCss.addEventListener('input', function() { state.theme.rawCustomCss = rawCss.value; applyThemeCss(); syncAll(); });
+
+      function dl(name, txt, mime) {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([txt], { type: mime }));
+        a.download = name; a.click();
+      }
+      document.getElementById('btn-export-md').addEventListener('click', function() { dl((state.title || 'OneTXT') + '.md', state.content, 'text/markdown'); });
+      document.getElementById('btn-export-theme').addEventListener('click', function() { dl('OneTXT-theme.json', JSON.stringify({ app:'OneTXT', type:'theme', theme: state.theme }, null, 2), 'application/json'); });
+      document.getElementById('btn-export-full').addEventListener('click', function() { dl('OneTXT-full-backup.json', JSON.stringify({ app:'OneTXT', type:'full', title: state.title, content: state.content, theme: state.theme }, null, 2), 'application/json'); });
+      document.getElementById('btn-export-html').addEventListener('click', function() {
+        document.getElementById('onetxt-state').textContent = JSON.stringify(state).replace(/</g,'\\u003c');
+        dl('OneTXT.html', '<!doctype html>\n' + document.documentElement.outerHTML, 'text/html');
+      });
+      document.getElementById('import-file').addEventListener('change', function(e) {
+        var f = e.target.files[0]; if (!f) return;
+        var r = new FileReader();
+        r.onload = function() {
+          var txt = String(r.result || '');
+          if (f.name.endsWith('.json')) {
+            try {
+              var obj = JSON.parse(txt);
+              if (obj.content !== undefined) state.content = obj.content;
+              if (obj.title) { state.title = obj.title; titleEl.value = obj.title; }
+              if (obj.theme) state.theme = obj.theme;
+              loadHeadingControls(); applyThemeCss(); syncAll();
+            } catch(err) {}
+          } else {
+            state.content = txt; editorEl.value = txt; syncAll();
+          }
+        };
+        r.readAsText(f);
+      });
+
+      loadHeadingControls();
+      syncAll();
+    })();
+  </script>
+</body>
+</html>
