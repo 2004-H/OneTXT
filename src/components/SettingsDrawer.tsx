@@ -37,8 +37,10 @@ interface SettingsDrawerProps {
   content: string;
   theme: DocumentTheme;
   preferences: EditorPreferences;
+  pinnedHeadings: string[];
   onThemeChange: (next: DocumentTheme) => void;
   onPreferencesChange: (next: EditorPreferences) => void;
+  onPinnedHeadingsChange: (next: string[]) => void;
   onImportDocument: (nextTitle: string | undefined, nextContent: string) => void;
   onClose: () => void;
 }
@@ -149,8 +151,10 @@ export function SettingsDrawer({
   content,
   theme,
   preferences,
+  pinnedHeadings,
   onThemeChange,
   onPreferencesChange,
+  onPinnedHeadingsChange,
   onImportDocument,
   onClose,
 }: SettingsDrawerProps) {
@@ -248,13 +252,20 @@ export function SettingsDrawer({
       content,
       theme,
       preferences,
+      pinnedHeadings,
     };
     downloadFile(`${safeSlug}-full-backup.json`, JSON.stringify(payload, null, 2), 'application/json');
     notify('ok', `Downloaded ${safeSlug}-full-backup.json`);
   };
 
   const handleExportStandaloneHtml = () => {
-    const html = buildStandaloneOneTxtHtml({ title, content, theme, preferences });
+    const html = buildStandaloneOneTxtHtml({
+      title,
+      content,
+      theme,
+      preferences,
+      pinnedHeadings,
+    });
     downloadFile('OneTXT.html', html, 'text/html;charset=utf-8');
     notify('ok', 'Downloaded self-contained OneTXT.html');
   };
@@ -310,6 +321,9 @@ export function SettingsDrawer({
         }
         if (parsed.preferences) {
           onPreferencesChange({ ...preferences, ...parsed.preferences });
+        }
+        if (Array.isArray(parsed.pinnedHeadings)) {
+          onPinnedHeadingsChange(parsed.pinnedHeadings);
         }
         notify('ok', `Restored full backup from ${file.name}`);
       } catch {

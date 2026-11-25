@@ -54,10 +54,11 @@
 }
 
 .onetxt-prose .onetxt-code-lang {
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.72rem;
-  letter-spacing: 0.02em;
-  opacity: 0.72;
+  font-family: 'Ubuntu Mono', 'Inconsolata', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .onetxt-prose .onetxt-copy-btn {
@@ -65,7 +66,7 @@
   align-items: center;
   gap: 0.35rem;
   padding: 0.32rem 0.65rem;
-  min-height: 30px;
+  min-height: 28px;
   border-radius: 6px;
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 0.72rem;
@@ -80,47 +81,102 @@
 }
 
 .onetxt-prose .onetxt-copy-btn[data-copied="true"] {
-  border-color: rgba(52, 211, 153, 0.45);
+  border-color: rgba(50, 205, 50, 0.55);
 }
 
+/* Forced 10px condensed font on code blocks */
 .onetxt-prose pre {
   margin: 0 !important;
   overflow-x: auto;
   border: none !important;
   border-radius: 0 !important;
+  font-size: 10px !important;
+  font-family: 'Ubuntu Mono', 'Inconsolata', ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  font-stretch: condensed;
 }
 
 .onetxt-prose pre code {
   background: transparent !important;
   padding: 0 !important;
   border-radius: 0 !important;
-  font-size: inherit !important;
+  font-size: 10px !important;
+  font-family: 'Ubuntu Mono', 'Inconsolata', ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  font-stretch: condensed;
   color: inherit !important;
 }
 
+/* Per-language syntax token colors */
+.onetxt-prose pre .tok-keyword { color: #C084FC; font-weight: 600; }
+.onetxt-prose pre .tok-string { color: #86EFAC; }
+.onetxt-prose pre .tok-comment { color: #64748B; font-style: italic; }
+.onetxt-prose pre .tok-number { color: #FB923C; }
+.onetxt-prose pre .tok-function { color: #38BDF8; }
+.onetxt-prose pre .tok-type { color: #FACC15; }
+.onetxt-prose pre .tok-property { color: #67E8F9; }
+.onetxt-prose pre .tok-tag { color: #F472B6; }
+.onetxt-prose pre .tok-attr { color: #FBBF24; }
+
+/* Squircle Checklist Styling with hanging indent */
 .onetxt-prose ul.contains-task-list {
   list-style: none;
   padding-left: 0.25rem;
 }
 
 .onetxt-prose li.task-list-item {
-  display: flex;
-  align-items: baseline;
-  gap: 0.55rem;
+  list-style: none;
+  position: relative;
+  padding-left: 1.7rem;
 }
 
-.onetxt-prose li.task-list-item input[type="checkbox"] {
-  accent-color: currentColor;
-  width: 0.95rem;
-  height: 0.95rem;
-  transform: translateY(1px);
+.onetxt-prose li.task-list-item > p {
+  margin-top: 0;
+}
+
+.onetxt-prose li.task-list-item > p:last-child {
+  margin-bottom: 0;
+}
+
+.onetxt-prose .onetxt-checkbox {
+  position: absolute;
+  left: 0;
+  top: 0.28em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 5.5px;
   cursor: pointer;
+  user-select: none;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 120ms ease;
 }
 
+.onetxt-prose .onetxt-checkbox:active {
+  transform: scale(0.92);
+}
+
+.onetxt-prose .onetxt-checkbox:focus-visible {
+  outline: 2px solid #3B82F6;
+  outline-offset: 2px;
+}
+
+/* Responsive table wrapper */
 .onetxt-prose .onetxt-table-wrap {
   width: 100%;
+  max-width: 100%;
   overflow-x: auto;
   margin: 1.5em 0;
+}
+
+.onetxt-prose table {
+  width: 100%;
+  max-width: 100%;
+}
+
+.onetxt-prose th,
+.onetxt-prose td {
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .onetxt-prose h1,
@@ -131,3 +187,72 @@
 .onetxt-prose h6 {
   scroll-margin-top: 1.5rem;
 }
+
+/* Source Mode Color Coding (same weight/metrics as textarea for 100% cursor alignment) */
+.onetxt-source-mirror .src-md-yaml-delim { color: #94A3B8; }
+.onetxt-source-mirror .src-md-yaml-key { color: #0284C7; }
+.onetxt-source-mirror .src-md-yaml-val { color: #059669; }
+.onetxt-source-mirror .src-md-h-mark { color: #94A3B8; }
+.onetxt-source-mirror .src-md-heading { color: #1D4ED8; }
+.onetxt-source-mirror .src-md-h1 { color: #7C3AED; }
+.onetxt-source-mirror .src-md-h2 { color: #2563EB; }
+.onetxt-source-mirror .src-md-h3 { color: #0284C7; }
+.onetxt-source-mirror .src-md-fence { color: #94A3B8; }
+.onetxt-source-mirror .src-md-fence-lang { color: #D97706; }
+.onetxt-source-mirror .src-md-code { color: #BE123C; background: rgba(190, 18, 60, 0.07); border-radius: 3px; }
+.onetxt-source-mirror .src-md-quote-mark { color: #0284C7; }
+.onetxt-source-mirror .src-md-quote { color: #475569; }
+.onetxt-source-mirror .src-md-list { color: #0284C7; }
+.onetxt-source-mirror .src-md-check-on { color: #16A34A; }
+.onetxt-source-mirror .src-md-check-off { color: #D97706; }
+.onetxt-source-mirror .src-md-bold { color: #B45309; }
+.onetxt-source-mirror .src-md-italic { color: #7C3AED; }
+.onetxt-source-mirror .src-md-strike { color: #64748B; text-decoration: line-through; }
+.onetxt-source-mirror .src-md-link { color: #2563EB; }
+.onetxt-source-mirror .src-md-hr { color: #94A3B8; }
+.onetxt-source-mirror .src-md-table-pipe { color: #0284C7; }
+.onetxt-source-mirror .src-md-muted { color: #71717A; }
+
+.onetxt-source-mirror .tok-keyword { color: #7C3AED; }
+.onetxt-source-mirror .tok-string { color: #059669; }
+.onetxt-source-mirror .tok-comment { color: #64748B; }
+.onetxt-source-mirror .tok-number { color: #EA580C; }
+.onetxt-source-mirror .tok-function { color: #0284C7; }
+.onetxt-source-mirror .tok-type { color: #B45309; }
+.onetxt-source-mirror .tok-property { color: #0F766E; }
+.onetxt-source-mirror .tok-tag { color: #DB2777; }
+.onetxt-source-mirror .tok-attr { color: #D97706; }
+
+.dark .onetxt-source-mirror .src-md-yaml-delim { color: #64748B; }
+.dark .onetxt-source-mirror .src-md-yaml-key { color: #38BDF8; }
+.dark .onetxt-source-mirror .src-md-yaml-val { color: #4ADE80; }
+.dark .onetxt-source-mirror .src-md-h-mark { color: #64748B; }
+.dark .onetxt-source-mirror .src-md-heading { color: #60A5FA; }
+.dark .onetxt-source-mirror .src-md-h1 { color: #32CD32; }
+.dark .onetxt-source-mirror .src-md-h2 { color: #38BDF8; }
+.dark .onetxt-source-mirror .src-md-h3 { color: #A78BFA; }
+.dark .onetxt-source-mirror .src-md-fence { color: #64748B; }
+.dark .onetxt-source-mirror .src-md-fence-lang { color: #FBBF24; }
+.dark .onetxt-source-mirror .src-md-code { color: #FDA4AF; background: rgba(251, 113, 133, 0.12); }
+.dark .onetxt-source-mirror .src-md-quote-mark { color: #38BDF8; }
+.dark .onetxt-source-mirror .src-md-quote { color: #94A3B8; }
+.dark .onetxt-source-mirror .src-md-list { color: #38BDF8; }
+.dark .onetxt-source-mirror .src-md-check-on { color: #4ADE80; }
+.dark .onetxt-source-mirror .src-md-check-off { color: #FBBF24; }
+.dark .onetxt-source-mirror .src-md-bold { color: #FCD34D; }
+.dark .onetxt-source-mirror .src-md-italic { color: #C4B5FD; }
+.dark .onetxt-source-mirror .src-md-strike { color: #64748B; }
+.dark .onetxt-source-mirror .src-md-link { color: #60A5FA; }
+.dark .onetxt-source-mirror .src-md-hr { color: #475569; }
+.dark .onetxt-source-mirror .src-md-table-pipe { color: #38BDF8; }
+.dark .onetxt-source-mirror .src-md-muted { color: #71717A; }
+
+.dark .onetxt-source-mirror .tok-keyword { color: #C084FC; }
+.dark .onetxt-source-mirror .tok-string { color: #86EFAC; }
+.dark .onetxt-source-mirror .tok-comment { color: #64748B; }
+.dark .onetxt-source-mirror .tok-number { color: #FB923C; }
+.dark .onetxt-source-mirror .tok-function { color: #38BDF8; }
+.dark .onetxt-source-mirror .tok-type { color: #FACC15; }
+.dark .onetxt-source-mirror .tok-property { color: #67E8F9; }
+.dark .onetxt-source-mirror .tok-tag { color: #F472B6; }
+.dark .onetxt-source-mirror .tok-attr { color: #FBBF24; }

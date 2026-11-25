@@ -184,4 +184,5 @@ export interface OneTxtBackup {
   content?: string;
   theme?: DocumentTheme;
   preferences?: EditorPreferences;
+  pinnedHeadings?: string[];
 }

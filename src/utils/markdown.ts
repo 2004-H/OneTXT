@@ -1,6 +1,8 @@
 import DOMPurify from 'dompurify';
 import { marked, Renderer } from 'marked';
 import { DocumentStats, TocItem } from '../types/onetxt';
+import { getLanguageAccentColor, highlightCodeBlock } from './syntaxHighlight';
+import { parseYamlFrontmatter, YamlProperty } from './yamlFrontmatter';
 
 function escapeHtml(value: string): string {
   return value
@@ -26,16 +28,17 @@ function stripInlineMarkdown(text: string): string {
 
 /**
  * Extracts ATX headings (`#` .. `######`) with exact 1-based line numbers,
- * skipping lines inside fenced code blocks.
+ * skipping YAML frontmatter and fenced code blocks.
  */
 export function extractTocFromMarkdown(markdown: string): TocItem[] {
+  const { frontmatterLineCount } = parseYamlFrontmatter(markdown);
   const lines = markdown.split(/\r?\n/);
   const items: TocItem[] = [];
   let inFence = false;
   let fenceChar = '';
   let headingCounter = 0;
 
-  for (let i = 0; i < lines.length; i++) {
+  for (let i = frontmatterLineCount; i < lines.length; i++) {
     const line = lines[i];
     const fenceMatch = /^\s*(```+|~~~+)/.exec(line);
     if (fenceMatch) {
@@ -71,24 +74,70 @@ export function extractTocFromMarkdown(markdown: string): TocItem[] {
   return items;
 }
 
+/**
+ * Toggles the Nth GFM task list checkbox (`- [ ]` <-> `- [x]`) outside YAML frontmatter and fenced code blocks.
+ */
+export function toggleMarkdownTaskAtIndex(markdown: string, targetIndex: number): string {
+  const { frontmatterLineCount } = parseYamlFrontmatter(markdown);
+  const lines = markdown.split(/\r?\n/);
+  let inFence = false;
+  let fenceChar = '';
+  let taskCounter = 0;
+
+  for (let i = frontmatterLineCount; i < lines.length; i++) {
+    const line = lines[i];
+    const fenceMatch = /^\s*(```+|~~~+)/.exec(line);
+    if (fenceMatch) {
+      const marker = fenceMatch[1][0];
+      if (!inFence) {
+        inFence = true;
+        fenceChar = marker;
+      } else if (marker === fenceChar) {
+        inFence = false;
+        fenceChar = '';
+      }
+      continue;
+    }
+
+    if (inFence) continue;
+
+    const taskMatch = /^(\s*(?:[-*+]|\d+\.)\s+\[)([ xX])(\]\s*.*)$/.exec(line);
+    if (taskMatch) {
+      if (taskCounter === targetIndex) {
+        const nextMark = taskMatch[2].toLowerCase() === 'x' ? ' ' : 'x';
+        lines[i] = `${taskMatch[1]}${nextMark}${taskMatch[3]}`;
+        return lines.join('\n');
+      }
+      taskCounter++;
+    }
+  }
+
+  return markdown;
+}
+
 export function computeDocumentStats(markdown: string): DocumentStats {
-  const trimmed = markdown.trim();
+  const { body } = parseYamlFrontmatter(markdown);
+  const trimmed = body.trim();
   const words = trimmed ? trimmed.split(/\s+/).length : 0;
-  const characters = markdown.length;
+  const characters = body.length;
   const lines = markdown ? markdown.split(/\r?\n/).length : 0;
   const readingMinutes = Math.max(1, Math.ceil(words / 225));
   return { words, characters, lines, readingMinutes };
 }
 
 const COPY_ICON_SVG = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
+const CHECKBOX_TICK_SVG = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
 
 export function renderMarkdownToHtml(markdown: string): {
   html: string;
   toc: TocItem[];
+  properties: YamlProperty[];
 } {
+  const { body, properties } = parseYamlFrontmatter(markdown);
   const lineToc = extractTocFromMarkdown(markdown);
   const renderedToc: TocItem[] = [];
   let headingIdx = 0;
+  let taskIdx = 0;
 
   const renderer = new Renderer();
 
@@ -109,14 +158,15 @@ export function renderMarkdownToHtml(markdown: string): {
 
   renderer.code = function ({ text, lang }) {
     const language = (lang || '').trim().split(/\s+/)[0] || 'text';
-    const escapedCode = escapeHtml(text);
+    const langColor = getLanguageAccentColor(language);
+    const highlightedCode = highlightCodeBlock(text, language);
     const escapedLang = escapeHtml(language);
     return `<div class="onetxt-code-wrap" data-code-block="true">
   <div class="onetxt-code-header">
-    <span class="onetxt-code-lang">${escapedLang}</span>
+    <span class="onetxt-code-lang" style="color:${langColor}">${escapedLang}</span>
     <button type="button" class="onetxt-copy-btn" data-copy-code="true" aria-label="Copy code block to clipboard">${COPY_ICON_SVG}<span>Copy</span></button>
   </div>
-  <pre><code>${escapedCode}</code></pre>
+  <pre><code>${highlightedCode}</code></pre>
 </div>\n`;
   };
 
@@ -140,15 +190,17 @@ export function renderMarkdownToHtml(markdown: string): {
     return `<div class="onetxt-table-wrap"><table><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table></div>\n`;
   };
 
+  renderer.checkbox = function ({ checked }) {
+    const currentIndex = taskIdx++;
+    return `<span class="onetxt-checkbox" data-task-index="${currentIndex}" data-checked="${checked ? 'true' : 'false'}" role="checkbox" tabindex="0" aria-checked="${checked ? 'true' : 'false'}" aria-label="${checked ? 'Completed task' : 'Incomplete task'}">${checked ? CHECKBOX_TICK_SVG : ''}</span>`;
+  };
+
   renderer.listitem = function (item) {
-    let itemBody = '';
+    const itemBody = this.parser.parse(item.tokens);
     if (item.task) {
-      const checkbox = `<input type="checkbox" ${item.checked ? 'checked=""' : ''} disabled="" />`;
-      itemBody += checkbox + ' ';
+      return `<li class="task-list-item" data-task-checked="${item.checked ? 'true' : 'false'}">${itemBody}</li>\n`;
     }
-    itemBody += this.parser.parse(item.tokens);
-    const cls = item.task ? ' class="task-list-item"' : '';
-    return `<li${cls}>${itemBody}</li>\n`;
+    return `<li>${itemBody}</li>\n`;
   };
 
   renderer.list = function (token) {
@@ -163,7 +215,7 @@ export function renderMarkdownToHtml(markdown: string): {
     return `<${tag}${startAttr}${clsAttr}>\n${body}</${tag}>\n`;
   };
 
-  const rawHtml = marked.parse(markdown, {
+  const rawHtml = marked.parse(body, {
     renderer,
     gfm: true,
     breaks: false,
@@ -174,7 +226,13 @@ export function renderMarkdownToHtml(markdown: string): {
     ADD_ATTR: [
       'data-code-block',
       'data-copy-code',
+      'data-task-index',
+      'data-task-checked',
+      'data-checked',
       'aria-label',
+      'aria-checked',
+      'role',
+      'tabindex',
       'type',
       'viewBox',
       'width',
@@ -199,5 +257,6 @@ export function renderMarkdownToHtml(markdown: string): {
   return {
     html: cleanHtml,
     toc: renderedToc.length > 0 ? renderedToc : lineToc,
+    properties,
   };
 }

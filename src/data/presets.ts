@@ -18,6 +18,8 @@ export const BODY_FONT_OPTIONS: { label: string; value: string }[] = FONT_OPTION
 );
 
 export const MONO_FONT_OPTIONS: { label: string; value: string }[] = [
+  { label: 'Ubuntu Mono (Condensed)', value: "'Ubuntu Mono', 'Inconsolata', ui-monospace, monospace" },
+  { label: 'Inconsolata (Condensed)', value: "'Inconsolata', ui-monospace, monospace" },
   { label: 'JetBrains Mono', value: "'JetBrains Mono', ui-monospace, monospace" },
   { label: 'System Monospace', value: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" },
 ];
@@ -170,9 +172,9 @@ export const THEME_PRESETS: DocumentTheme[] = [
         headerBg: '#1C2029',
         borderColor: '#262B36',
         borderRadius: '10px',
-        fontSize: '0.875rem',
+        fontSize: '10px',
         lineHeight: '1.62',
-        padding: '16px 18px',
+        padding: '14px 16px',
         copyBtnColor: '#E5E9F0',
         copyBtnBg: '#272D3A',
         customCss: '',
@@ -196,7 +198,7 @@ export const THEME_PRESETS: DocumentTheme[] = [
         borderColor: '#E2E0D8',
         rowAltBg: '#F8F7F4',
         striped: true,
-        cellPadding: '10px 14px',
+        cellPadding: '8px 10px',
         borderRadius: '8px',
         customCss: '',
       },
@@ -212,6 +214,167 @@ export const THEME_PRESETS: DocumentTheme[] = [
         borderRadius: '10px',
         maxWidth: '100%',
         shadow: 'subtle',
+        customCss: '',
+      },
+    },
+    rawCustomCss: '',
+  },
+  {
+    id: 'amoled-lime',
+    name: 'AMOLED Lime',
+    isDarkUI: true,
+    pageBg: '#000000',
+    surfaceBg: '#090B09',
+    textColor: '#F1F5F1',
+    mutedColor: '#8B9A8B',
+    accentColor: '#32CD32',
+    bodyFont: "'Plus Jakarta Sans', sans-serif",
+    monoFont: "'JetBrains Mono', ui-monospace, monospace",
+    baseFontSize: 16,
+    baseLineHeight: 1.74,
+    maxWidth: 760,
+    contentPaddingX: 28,
+    contentPaddingY: 42,
+    headings: {
+      h1: createHeading({
+        fontFamily: "'Bricolage Grotesque', sans-serif",
+        fontSize: '2.45rem',
+        fontWeight: '700',
+        lineHeight: '1.14',
+        letterSpacing: '-0.025em',
+        color: '#FFFFFF',
+        marginTop: '0.4em',
+        marginBottom: '0.65em',
+        paddingBottom: '12px',
+        borderSide: 'bottom',
+        borderWidth: '1px',
+        borderColor: '#1D291D',
+      }),
+      h2: createHeading({
+        fontFamily: "'Bricolage Grotesque', sans-serif",
+        fontSize: '1.7rem',
+        fontWeight: '600',
+        lineHeight: '1.22',
+        letterSpacing: '-0.02em',
+        color: '#E8F7E8',
+        marginTop: '2.1em',
+        marginBottom: '0.55em',
+        paddingBottom: '8px',
+        borderSide: 'bottom',
+        borderWidth: '1px',
+        borderColor: '#162016',
+      }),
+      h3: createHeading({
+        fontSize: '1.25rem',
+        fontWeight: '600',
+        color: '#32CD32',
+        marginTop: '1.65em',
+        marginBottom: '0.45em',
+      }),
+      h4: createHeading({
+        fontSize: '1.08rem',
+        fontWeight: '600',
+        color: '#D7E6D7',
+        marginTop: '1.4em',
+        marginBottom: '0.4em',
+      }),
+      h5: createHeading({
+        fontSize: '0.92rem',
+        fontWeight: '700',
+        letterSpacing: '0.05em',
+        textTransform: 'uppercase',
+        color: '#5CE65C',
+        marginTop: '1.25em',
+        marginBottom: '0.35em',
+      }),
+      h6: createHeading({
+        fontSize: '0.88rem',
+        fontWeight: '500',
+        fontStyle: 'italic',
+        color: '#8B9A8B',
+        marginTop: '1.1em',
+        marginBottom: '0.3em',
+      }),
+    },
+    elements: {
+      paragraph: {
+        fontSize: '1em',
+        lineHeight: '1.75',
+        color: '#E2E8E2',
+        marginBottom: '1.15em',
+        textIndent: '0em',
+        customCss: '',
+      },
+      blockquote: {
+        color: '#C2D1C2',
+        backgroundColor: '#070B07',
+        borderColor: '#1B2E1B',
+        borderWidth: '1px',
+        borderSide: 'all',
+        borderRadius: '10px',
+        padding: '16px 20px',
+        marginY: '1.5em',
+        fontStyle: 'italic',
+        customCss: '',
+      },
+      inlineCode: {
+        color: '#32CD32',
+        backgroundColor: '#0B140B',
+        borderRadius: '5px',
+        paddingX: '6px',
+        paddingY: '2px',
+        fontSize: '0.875em',
+        borderColor: '#1B331B',
+        customCss: '',
+      },
+      codeBlock: {
+        color: '#E5EFE5',
+        backgroundColor: '#050705',
+        headerBg: '#0B0F0B',
+        borderColor: '#1A261A',
+        borderRadius: '10px',
+        fontSize: '10px',
+        lineHeight: '1.6',
+        padding: '14px 16px',
+        copyBtnColor: '#32CD32',
+        copyBtnBg: '#101810',
+        customCss: '',
+      },
+      link: {
+        color: '#32CD32',
+        underlineMode: 'hover',
+        underlineOffset: '3px',
+        fontWeight: '500',
+        customCss: '',
+      },
+      list: {
+        markerColor: '#32CD32',
+        itemSpacing: '0.4em',
+        indent: '1.45em',
+        customCss: '',
+      },
+      table: {
+        headerBg: '#0B100B',
+        headerColor: '#32CD32',
+        borderColor: '#1B261B',
+        rowAltBg: '#060806',
+        striped: true,
+        cellPadding: '8px 10px',
+        borderRadius: '8px',
+        customCss: '',
+      },
+      hr: {
+        color: '#192419',
+        thickness: '1px',
+        style: 'solid',
+        marginY: '2.25em',
+        width: '100%',
+        customCss: '',
+      },
+      image: {
+        borderRadius: '10px',
+        maxWidth: '100%',
+        shadow: 'medium',
         customCss: '',
       },
     },
@@ -331,9 +494,9 @@ export const THEME_PRESETS: DocumentTheme[] = [
         headerBg: '#11161F',
         borderColor: '#232936',
         borderRadius: '10px',
-        fontSize: '0.875rem',
+        fontSize: '10px',
         lineHeight: '1.62',
-        padding: '16px 18px',
+        padding: '14px 16px',
         copyBtnColor: '#E2E8F0',
         copyBtnBg: '#1D2432',
         customCss: '',
@@ -357,7 +520,7 @@ export const THEME_PRESETS: DocumentTheme[] = [
         borderColor: '#242B3A',
         rowAltBg: '#11151D',
         striped: true,
-        cellPadding: '10px 14px',
+        cellPadding: '8px 10px',
         borderRadius: '8px',
         customCss: '',
       },
@@ -491,9 +654,9 @@ export const THEME_PRESETS: DocumentTheme[] = [
         headerBg: '#2E2823',
         borderColor: '#3E362F',
         borderRadius: '8px',
-        fontSize: '0.86rem',
+        fontSize: '10px',
         lineHeight: '1.6',
-        padding: '16px 18px',
+        padding: '14px 16px',
         copyBtnColor: '#F3EFE6',
         copyBtnBg: '#3D352E',
         customCss: '',
@@ -517,7 +680,7 @@ export const THEME_PRESETS: DocumentTheme[] = [
         borderColor: '#DCD4C6',
         rowAltBg: '#F4F0E7',
         striped: true,
-        cellPadding: '10px 14px',
+        cellPadding: '8px 10px',
         borderRadius: '6px',
         customCss: '',
       },
@@ -655,7 +818,7 @@ export const THEME_PRESETS: DocumentTheme[] = [
         headerBg: '#1E293B',
         borderColor: '#334155',
         borderRadius: '8px',
-        fontSize: '0.85rem',
+        fontSize: '10px',
         lineHeight: '1.58',
         padding: '14px 16px',
         copyBtnColor: '#F8FAFC',
@@ -681,7 +844,7 @@ export const THEME_PRESETS: DocumentTheme[] = [
         borderColor: '#CBD5E1',
         rowAltBg: '#F8FAFC',
         striped: true,
-        cellPadding: '9px 12px',
+        cellPadding: '8px 10px',
         borderRadius: '6px',
         customCss: '',
       },
@@ -808,9 +971,9 @@ export const THEME_PRESETS: DocumentTheme[] = [
         headerBg: '#1B2821',
         borderColor: '#283A30',
         borderRadius: '10px',
-        fontSize: '0.875rem',
+        fontSize: '10px',
         lineHeight: '1.6',
-        padding: '16px 18px',
+        padding: '14px 16px',
         copyBtnColor: '#E6EFE9',
         copyBtnBg: '#27382F',
         customCss: '',
@@ -834,7 +997,7 @@ export const THEME_PRESETS: DocumentTheme[] = [
         borderColor: '#D1DDD4',
         rowAltBg: '#EFF4F0',
         striped: true,
-        cellPadding: '10px 14px',
+        cellPadding: '8px 10px',
         borderRadius: '8px',
         customCss: '',
       },
@@ -866,7 +1029,16 @@ export const DEFAULT_PREFERENCES: EditorPreferences = {
 
 export const DEFAULT_DOCUMENT_TITLE = 'OneTXT Field Guide';
 
-export const DEFAULT_DOCUMENT_CONTENT = `# OneTXT Long-Form Document Studio
+export const DEFAULT_DOCUMENT_CONTENT = `---
+author: Adithyan
+status: Active Draft
+updated: 2026-11-24
+category: Field Guide
+tags: [markdown, css-theme, notes]
+summary: Long-form technical notebook & live theme studio
+---
+
+# OneTXT Long-Form Document Studio
 
 Welcome to **OneTXT** — a portable, single-document Markdown workspace built for long-form writing, technical specifications, personal wikis, and structured reading. Everything you write is saved automatically in your browser, and you can export your text, CSS theme, or a complete self-contained \`OneTXT.html\` file anytime.
 
@@ -876,11 +1048,11 @@ Welcome to **OneTXT** — a portable, single-document Markdown workspace built f
 
 ## Navigation & Core Controls
 
-Use the three anchored controls along the bottom bar to move effortlessly across long documents:
+Use the three anchored controls inside the floating bottom pill to move effortlessly across long documents:
 
 1. **Source / Read** — Flip instantaneously between rendered typography and raw Markdown editing.
 2. **Outline** — Inspect the hierarchical table of contents (\`H1\` through \`H6\`) and jump directly to any section.
-3. **Settings** — Customize per-heading CSS rules, markdown block styles, theme presets, and portable backups.
+3. **Settings** — Customize per-heading CSS rules, markdown block styles, theme presets (including AMOLED Lime), and portable backups.
 
 ### Quick Checklist for New Documents
 
@@ -893,7 +1065,7 @@ Use the three anchored controls along the bottom bar to move effortlessly across
 
 ## Code Blocks with Single-Tap Copy
 
-Every fenced code block includes a dedicated **Copy** button in the top-right corner. Tap or click once to copy the block straight to your clipboard.
+Every fenced code block includes a dedicated **Copy** button in the top-right corner and renders crisp 10px monospace code. Tap or click once to copy the block straight to your clipboard.
 
 \`\`\`typescript
 interface DocumentSection {
@@ -927,7 +1099,7 @@ In **Settings → Markdown CSS**, select any header level (\`H1\` through \`H6\`
 \`\`\`css
 /* Example custom CSS you can paste into Settings -> Raw CSS */
 h2 {
-  background: linear-gradient(90deg, rgba(37, 99, 235, 0.08), transparent);
+  background: linear-gradient(90deg, rgba(50, 205, 50, 0.10), transparent);
   padding: 0.45rem 0.75rem;
   border-radius: 6px;
 }
@@ -939,19 +1111,19 @@ blockquote p:last-child {
 
 #### Level 4 Heading: Structured Reference Tables
 
-Tables support clean alignment, optional zebra striping, and customizable borders:
+Tables automatically adapt their font size (down to a minimum of 9px) to fit comfortably on your screen:
 
-| Element | Default Shortcut / Syntax | Customizable Properties |
-| :--- | :--- | :--- |
-| Headings \`H1–H6\` | \`#\` through \`######\` | Font, Size, Color, Background, Borders, Custom CSS |
-| Inline Code | Backticks \`\\\`code\\\`\` | Text Color, Surface Fill, Radius, Padding |
-| Code Block | Triple backticks \`\\\`\\\`\\\`\` | Palette, Header Bar, Copy Button, Line Height |
-| Blockquote | Leading \`>\` | Italic Style, Border Side, Padding, Background |
-| Hyperlinks | \`[label](url)\` | Color, Underline Mode, Offset, Weight |
+| Element | Markdown Syntax | Key Customizable Properties | Default Note |
+| :--- | :--- | :--- | :--- |
+| Headings \`H1–H6\` | \`#\` through \`######\` | Font, Size, Color, Background, Borders | Independent per level |
+| Checklist | \`- [x]\` / \`- [ ]\` | Squircle accent fill & border | Single crisp checkbox |
+| Code Block | Triple backticks | Palette, Header Bar, Copy Button | 10px monospace text |
+| Blockquote | Leading \`>\` | Italic Style, Border Side, Padding | Clean rounded surface |
+| Tables | Pipe syntax | Header Bg, Stripes, Padding | Auto-fits down to 9px |
 
 ##### Level 5 Heading: Shell & Backup Workflows
 
-You can export three distinct backup tiers from **Settings → Backup & Restore**:
+You can export three distinct backup tiers from **Settings → Backup**:
 
 \`\`\`bash
 # Text Backup (.md / .txt)   -> Portable plain Markdown content

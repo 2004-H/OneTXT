@@ -1,5 +1,12 @@
-import { forwardRef, KeyboardEvent, useImperativeHandle, useMemo, useRef } from 'react';
+import {
+  forwardRef,
+  KeyboardEvent,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from 'react';
 import { DocumentTheme, EditorPreferences } from '../types/onetxt';
+import { highlightMarkdownSource } from '../utils/syntaxHighlight';
 
 interface MarkdownEditorProps {
   value: string;
@@ -16,12 +23,13 @@ export interface MarkdownEditorHandle {
 export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
   function MarkdownEditor({ value, onChange, theme, preferences }, ref) {
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-    const gutterRef = useRef<HTMLDivElement | null>(null);
 
     const lineCount = useMemo(() => {
       if (!value) return 1;
       return value.split(/\r?\n/).length;
     }, [value]);
+
+    const highlightedHtml = useMemo(() => highlightMarkdownSource(value), [value]);
 
     useImperativeHandle(ref, () => ({
       scrollToLine(lineNumber: number) {
@@ -36,12 +44,10 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorPro
         textarea.focus();
         textarea.setSelectionRange(charPos, charPos + (lines[clampedLine - 1]?.length ?? 0));
 
+        const rect = textarea.getBoundingClientRect();
         const lineHeightPx = preferences.editorFontSize * 1.65;
-        const targetScroll = Math.max(0, (clampedLine - 4) * lineHeightPx);
-        textarea.scrollTop = targetScroll;
-        if (gutterRef.current) {
-          gutterRef.current.scrollTop = targetScroll;
-        }
+        const targetY = window.scrollY + rect.top + Math.max(0, (clampedLine - 4) * lineHeightPx);
+        window.scrollTo({ top: targetY, behavior: 'smooth' });
       },
       insertSnippet(before: string, after = '', placeholder = '') {
         const textarea = textareaRef.current;
@@ -76,29 +82,30 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorPro
       }
     };
 
-    const handleScroll = () => {
-      if (textareaRef.current && gutterRef.current) {
-        gutterRef.current.scrollTop = textareaRef.current.scrollTop;
-      }
+    const sharedEditorStyle: React.CSSProperties = {
+      fontFamily: theme.monoFont,
+      fontSize: `${preferences.editorFontSize}px`,
+      lineHeight: 1.65,
+      letterSpacing: 'normal',
+      tabSize: 2,
+      whiteSpace: preferences.wordWrap ? 'pre-wrap' : 'pre',
+      overflowWrap: preferences.wordWrap ? 'break-word' : 'normal',
+      wordBreak: 'normal',
     };
 
     return (
-      <div className="max-w-5xl mx-auto px-3 sm:px-8 py-6">
-        <div
-          className="flex rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-xs"
-          style={{ backgroundColor: theme.surfaceBg }}
-        >
+      <div className="max-w-5xl mx-auto px-3 sm:px-8 pt-4 pb-28">
+        <div className="flex items-start bg-transparent">
           {preferences.showLineNumbers && (
             <div
-              ref={gutterRef}
               aria-hidden="true"
-              className="hidden sm:block select-none py-5 px-3 text-right border-r border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden tabular-nums text-zinc-400 dark:text-zinc-600"
+              className="hidden sm:block select-none py-3 pr-4 text-right tabular-nums opacity-40 shrink-0"
               style={{
                 fontFamily: theme.monoFont,
                 fontSize: `${preferences.editorFontSize}px`,
                 lineHeight: 1.65,
-                minWidth: '3.25rem',
-                maxHeight: 'calc(100vh - 220px)',
+                minWidth: '2.75rem',
+                color: theme.mutedColor,
               }}
             >
               {Array.from({ length: lineCount }, (_, idx) => (
@@ -107,26 +114,41 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorPro
             </div>
           )}
 
-          <textarea
-            ref={textareaRef}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onScroll={handleScroll}
-            spellCheck={preferences.spellCheck}
-            wrap={preferences.wordWrap ? 'soft' : 'off'}
-            aria-label="Markdown document source"
-            placeholder="# Start writing your Markdown document..."
-            className="w-full flex-1 bg-transparent p-4 sm:p-5 focus:outline-none resize-none onetxt-scroll"
-            style={{
-              fontFamily: theme.monoFont,
-              fontSize: `${preferences.editorFontSize}px`,
-              lineHeight: 1.65,
-              color: theme.textColor,
-              minHeight: 'calc(100vh - 220px)',
-              height: 'calc(100vh - 220px)',
-            }}
-          />
+          <div
+            className={`relative flex-1 min-w-0 ${
+              preferences.wordWrap ? 'overflow-hidden' : 'overflow-x-auto onetxt-scroll'
+            }`}
+          >
+            <div className="relative min-w-full">
+              <pre
+                aria-hidden="true"
+                className="onetxt-source-mirror m-0 py-3 px-1 sm:px-2 pointer-events-none select-none"
+                style={{
+                  ...sharedEditorStyle,
+                  color: theme.textColor,
+                  minHeight: 'calc(100dvh - 120px)',
+                }}
+                dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+              />
+
+              <textarea
+                ref={textareaRef}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                spellCheck={preferences.spellCheck}
+                wrap={preferences.wordWrap ? 'soft' : 'off'}
+                aria-label="Markdown document source"
+                placeholder="# Start writing your Markdown document..."
+                className="absolute inset-0 w-full h-full bg-transparent text-transparent py-3 px-1 sm:px-2 border-0 outline-none focus:outline-none resize-none overflow-hidden selection:bg-blue-500/25"
+                style={{
+                  ...sharedEditorStyle,
+                  caretColor: theme.textColor,
+                  WebkitTextFillColor: 'transparent',
+                }}
+              />
+            </div>
+          </div>
         </div>
       </div>
     );

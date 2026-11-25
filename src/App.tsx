@@ -18,7 +18,12 @@ import {
   TocItem,
   ViewMode,
 } from './types/onetxt';
-import { computeDocumentStats, renderMarkdownToHtml } from './utils/markdown';
+import {
+  computeDocumentStats,
+  renderMarkdownToHtml,
+  toggleMarkdownTaskAtIndex,
+} from './utils/markdown';
+import { removeYamlProperty, upsertYamlProperty } from './utils/yamlFrontmatter';
 
 const STORAGE_KEYS = {
   TITLE: 'onetxt_doc_title_v1',
@@ -26,6 +31,7 @@ const STORAGE_KEYS = {
   THEME: 'onetxt_doc_theme_v1',
   PREFS: 'onetxt_doc_prefs_v1',
   MODE: 'onetxt_view_mode_v1',
+  PINS: 'onetxt_pinned_headings_v1',
 };
 
 function loadFromStorage<T>(key: string, fallback: T): T {
@@ -60,6 +66,9 @@ export default function App() {
   const [preferences, setPreferences] = useState<EditorPreferences>(() =>
     loadFromStorage<EditorPreferences>(STORAGE_KEYS.PREFS, DEFAULT_PREFERENCES)
   );
+  const [pinnedHeadings, setPinnedHeadings] = useState<string[]>(() =>
+    loadFromStorage<string[]>(STORAGE_KEYS.PINS, [])
+  );
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = loadStringFromStorage(STORAGE_KEYS.MODE, 'read');
     return saved === 'source' ? 'source' : 'read';
@@ -70,26 +79,24 @@ export default function App() {
 
   const editorRef = useRef<MarkdownEditorHandle | null>(null);
 
-  const { html, toc } = useMemo(() => renderMarkdownToHtml(content), [content]);
+  const { html, toc, properties } = useMemo(() => renderMarkdownToHtml(content), [content]);
   const stats = useMemo(() => computeDocumentStats(content), [content]);
 
-  // Sync dark/light class on <html> for clean app chrome contrast
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme.isDarkUI);
   }, [theme.isDarkUI]);
 
-  // Sync browser page title
   useEffect(() => {
     document.title = `${title.trim() || 'Untitled'} — OneTXT`;
   }, [title]);
 
-  // Persist state to localStorage
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEYS.TITLE, title);
       localStorage.setItem(STORAGE_KEYS.CONTENT, content);
       localStorage.setItem(STORAGE_KEYS.THEME, JSON.stringify(theme));
       localStorage.setItem(STORAGE_KEYS.PREFS, JSON.stringify(preferences));
+      localStorage.setItem(STORAGE_KEYS.PINS, JSON.stringify(pinnedHeadings));
       localStorage.setItem(STORAGE_KEYS.MODE, viewMode);
       const now = new Date();
       const hh = String(now.getHours()).padStart(2, '0');
@@ -98,9 +105,8 @@ export default function App() {
     } catch {
       setLastSavedText('Local storage full');
     }
-  }, [title, content, theme, preferences, viewMode]);
+  }, [title, content, theme, preferences, pinnedHeadings, viewMode]);
 
-  // Track active heading in Read Mode on scroll
   useEffect(() => {
     if (viewMode !== 'read' || toc.length === 0) return;
 
@@ -124,7 +130,6 @@ export default function App() {
     return () => window.removeEventListener('scroll', updateActiveHeading);
   }, [viewMode, toc]);
 
-  // Close drawers with Escape key
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && activeDrawer !== 'none') {
@@ -141,6 +146,24 @@ export default function App() {
 
   const handleToggleDrawer = (drawer: 'outline' | 'settings') => {
     setActiveDrawer((prev) => (prev === drawer ? 'none' : drawer));
+  };
+
+  const handleToggleTask = (taskIndex: number) => {
+    setContent((prev) => toggleMarkdownTaskAtIndex(prev, taskIndex));
+  };
+
+  const handleTogglePinHeading = (pinKey: string) => {
+    setPinnedHeadings((prev) =>
+      prev.includes(pinKey) ? prev.filter((k) => k !== pinKey) : [pinKey, ...prev]
+    );
+  };
+
+  const handleUpsertProperty = (key: string, value: string) => {
+    setContent((prev) => upsertYamlProperty(prev, key, value));
+  };
+
+  const handleRemoveProperty = (key: string) => {
+    setContent((prev) => removeYamlProperty(prev, key));
   };
 
   const handleSelectHeading = (item: TocItem) => {
@@ -196,6 +219,7 @@ export default function App() {
             html={html}
             theme={theme}
             onSwitchToSource={() => setViewMode('source')}
+            onToggleTask={handleToggleTask}
           />
         ) : (
           <MarkdownEditor
@@ -211,10 +235,16 @@ export default function App() {
       <OutlineDrawer
         open={activeDrawer === 'outline'}
         toc={toc}
+        properties={properties}
+        stats={stats}
         activeHeadingId={activeHeadingId}
         viewMode={viewMode}
         accentColor={theme.accentColor}
+        pinnedHeadings={pinnedHeadings}
+        onTogglePinHeading={handleTogglePinHeading}
         onSelectHeading={handleSelectHeading}
+        onUpsertProperty={handleUpsertProperty}
+        onRemoveProperty={handleRemoveProperty}
         onClose={() => setActiveDrawer('none')}
       />
 
@@ -224,8 +254,10 @@ export default function App() {
         content={content}
         theme={theme}
         preferences={preferences}
+        pinnedHeadings={pinnedHeadings}
         onThemeChange={setTheme}
         onPreferencesChange={setPreferences}
+        onPinnedHeadingsChange={setPinnedHeadings}
         onImportDocument={handleImportDocument}
         onClose={() => setActiveDrawer('none')}
       />
@@ -236,6 +268,7 @@ export default function App() {
         onToggleViewMode={handleToggleViewMode}
         onToggleDrawer={handleToggleDrawer}
         accentColor={theme.accentColor}
+        isDarkUI={theme.isDarkUI}
       />
     </div>
   );

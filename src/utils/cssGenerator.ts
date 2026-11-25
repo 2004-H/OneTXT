@@ -27,6 +27,16 @@ function formatBorderRule(
   }
 }
 
+function getContrastOnHex(hex: string): string {
+  const clean = hex.replace('#', '').trim();
+  if (!/^[0-9a-fA-F]{6}$/.test(clean)) return '#FFFFFF';
+  const r = parseInt(clean.slice(0, 2), 16) / 255;
+  const g = parseInt(clean.slice(2, 4), 16) / 255;
+  const b = parseInt(clean.slice(4, 6), 16) / 255;
+  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return lum > 0.52 ? '#050805' : '#FFFFFF';
+}
+
 function buildHeadingRule(level: HeadingLevel, h: HeadingStyleConfig): string {
   const borderCss = formatBorderRule(h.borderSide, h.borderWidth, h.borderStyle, h.borderColor);
   const custom = h.customCss.trim() ? `\n  ${h.customCss.trim()}` : '';
@@ -50,15 +60,10 @@ function buildHeadingRule(level: HeadingLevel, h: HeadingStyleConfig): string {
 }`;
 }
 
-/**
- * Safely scopes user-authored raw CSS rules inside `.onetxt-prose`
- * so custom stylesheets never leak into the app chrome.
- */
 export function scopeCustomCss(rawCss: string): string {
   const trimmed = rawCss.trim();
   if (!trimmed) return '';
 
-  // Strip comments for clean rule splitting while preserving inner declarations
   const cleaned = trimmed.replace(/\/\*[\s\S]*?\*\//g, '');
   const blocks: string[] = [];
   let depth = 0;
@@ -89,7 +94,6 @@ export function scopeCustomCss(rawCss: string): string {
       if (!selectorPart) return '';
 
       if (selectorPart.startsWith('@')) {
-        // Keep @media / @supports / @keyframes intact, scoping nested selectors inside @media/@supports
         if (selectorPart.startsWith('@media') || selectorPart.startsWith('@supports')) {
           const inner = bodyPart.slice(1, -1);
           return `${selectorPart} {\n${scopeCustomCss(inner)}\n}`;
@@ -123,9 +127,7 @@ export function generateThemeCss(theme: DocumentTheme): string {
     .join('\n\n');
 
   const linkDecoration =
-    elements.link.underlineMode === 'always'
-      ? 'underline'
-      : 'none';
+    elements.link.underlineMode === 'always' ? 'underline' : 'none';
   const linkHoverDecoration =
     elements.link.underlineMode === 'none' ? 'none' : 'underline';
 
@@ -142,6 +144,10 @@ export function generateThemeCss(theme: DocumentTheme): string {
       : elements.image.shadow === 'subtle'
       ? '0 4px 16px -4px rgba(0, 0, 0, 0.1)'
       : 'none';
+
+  const checkMarkColor = getContrastOnHex(theme.accentColor);
+  const uncheckedBg = theme.isDarkUI ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.02)';
+  const uncheckedBorder = theme.isDarkUI ? 'rgba(255, 255, 255, 0.28)' : 'rgba(0, 0, 0, 0.26)';
 
   const scopedRaw = scopeCustomCss(theme.rawCustomCss);
 
@@ -221,10 +227,11 @@ ${headingRules}
 }
 
 .onetxt-prose pre {
-  font-family: ${theme.monoFont};
+  font-family: 'Ubuntu Mono', 'Inconsolata', ${theme.monoFont};
+  font-stretch: condensed;
   color: ${elements.codeBlock.color};
   background-color: ${elements.codeBlock.backgroundColor};
-  font-size: ${elements.codeBlock.fontSize};
+  font-size: 10px !important;
   line-height: ${elements.codeBlock.lineHeight};
   padding: ${elements.codeBlock.padding};
 }
@@ -272,6 +279,26 @@ ${headingRules}
   margin-bottom: 0.25em;
 }
 
+/* Squircle Checkbox Styling */
+.onetxt-prose .onetxt-checkbox {
+  background-color: ${uncheckedBg};
+  border: 1.5px solid ${uncheckedBorder};
+  color: ${checkMarkColor};
+}
+
+.onetxt-prose .onetxt-checkbox[data-checked="true"] {
+  background-color: ${theme.accentColor};
+  border-color: ${theme.accentColor};
+  color: ${checkMarkColor};
+}
+
+.onetxt-prose li.task-list-item[data-task-checked="true"],
+.onetxt-prose li.task-list-item[data-task-checked="true"] > p,
+.onetxt-prose li.task-list-item[data-task-checked="true"] a {
+  color: ${theme.mutedColor} !important;
+  opacity: 0.78;
+}
+
 .onetxt-prose .onetxt-table-wrap {
   border: 1px solid ${elements.table.borderColor};
   border-radius: ${elements.table.borderRadius};
@@ -280,7 +307,6 @@ ${headingRules}
 .onetxt-prose table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.94em;
   font-variant-numeric: tabular-nums;
   ${elements.table.customCss}
 }
