@@ -23,16 +23,20 @@ import {
   renderMarkdownToHtml,
   toggleMarkdownTaskAtIndex,
 } from './utils/markdown';
+import { EmbeddedOneTxtState, readEmbeddedOneTxtState } from './utils/standaloneHtml';
 import { removeYamlProperty, upsertYamlProperty } from './utils/yamlFrontmatter';
 
-const STORAGE_KEYS = {
-  TITLE: 'onetxt_doc_title_v1',
-  CONTENT: 'onetxt_doc_content_v1',
-  THEME: 'onetxt_doc_theme_v1',
-  PREFS: 'onetxt_doc_prefs_v1',
-  MODE: 'onetxt_view_mode_v1',
-  PINS: 'onetxt_pinned_headings_v1',
-};
+function getStorageKeys(snapshotId: string) {
+  const prefix = snapshotId && snapshotId !== 'default' ? `onetxt_${snapshotId}` : 'onetxt';
+  return {
+    TITLE: `${prefix}_doc_title_v1`,
+    CONTENT: `${prefix}_doc_content_v1`,
+    THEME: `${prefix}_doc_theme_v1`,
+    PREFS: `${prefix}_doc_prefs_v1`,
+    MODE: `${prefix}_view_mode_v1`,
+    PINS: `${prefix}_pinned_headings_v1`,
+  };
+}
 
 function loadFromStorage<T>(key: string, fallback: T): T {
   try {
@@ -54,23 +58,39 @@ function loadStringFromStorage(key: string, fallback: string): string {
 }
 
 export default function App() {
+  const embeddedRef = useRef<EmbeddedOneTxtState | null | undefined>(undefined);
+  if (embeddedRef.current === undefined) {
+    embeddedRef.current = readEmbeddedOneTxtState();
+  }
+  const embedded = embeddedRef.current;
+  const storageKeys = useMemo(
+    () => getStorageKeys(embedded?.snapshotId || 'default'),
+    [embedded?.snapshotId]
+  );
+
   const [title, setTitle] = useState<string>(() =>
-    loadStringFromStorage(STORAGE_KEYS.TITLE, DEFAULT_DOCUMENT_TITLE)
+    loadStringFromStorage(storageKeys.TITLE, embedded?.title ?? DEFAULT_DOCUMENT_TITLE)
   );
   const [content, setContent] = useState<string>(() =>
-    loadStringFromStorage(STORAGE_KEYS.CONTENT, DEFAULT_DOCUMENT_CONTENT)
+    loadStringFromStorage(storageKeys.CONTENT, embedded?.content ?? DEFAULT_DOCUMENT_CONTENT)
   );
   const [theme, setTheme] = useState<DocumentTheme>(() =>
-    loadFromStorage<DocumentTheme>(STORAGE_KEYS.THEME, structuredClone(THEME_PRESETS[0]))
+    loadFromStorage<DocumentTheme>(
+      storageKeys.THEME,
+      embedded?.theme ?? structuredClone(THEME_PRESETS[0])
+    )
   );
   const [preferences, setPreferences] = useState<EditorPreferences>(() =>
-    loadFromStorage<EditorPreferences>(STORAGE_KEYS.PREFS, DEFAULT_PREFERENCES)
+    loadFromStorage<EditorPreferences>(
+      storageKeys.PREFS,
+      embedded?.preferences ?? DEFAULT_PREFERENCES
+    )
   );
   const [pinnedHeadings, setPinnedHeadings] = useState<string[]>(() =>
-    loadFromStorage<string[]>(STORAGE_KEYS.PINS, [])
+    loadFromStorage<string[]>(storageKeys.PINS, embedded?.pinnedHeadings ?? [])
   );
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
-    const saved = loadStringFromStorage(STORAGE_KEYS.MODE, 'read');
+    const saved = loadStringFromStorage(storageKeys.MODE, 'read');
     return saved === 'source' ? 'source' : 'read';
   });
   const [activeDrawer, setActiveDrawer] = useState<ActiveDrawer>('none');
@@ -92,12 +112,12 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEYS.TITLE, title);
-      localStorage.setItem(STORAGE_KEYS.CONTENT, content);
-      localStorage.setItem(STORAGE_KEYS.THEME, JSON.stringify(theme));
-      localStorage.setItem(STORAGE_KEYS.PREFS, JSON.stringify(preferences));
-      localStorage.setItem(STORAGE_KEYS.PINS, JSON.stringify(pinnedHeadings));
-      localStorage.setItem(STORAGE_KEYS.MODE, viewMode);
+      localStorage.setItem(storageKeys.TITLE, title);
+      localStorage.setItem(storageKeys.CONTENT, content);
+      localStorage.setItem(storageKeys.THEME, JSON.stringify(theme));
+      localStorage.setItem(storageKeys.PREFS, JSON.stringify(preferences));
+      localStorage.setItem(storageKeys.PINS, JSON.stringify(pinnedHeadings));
+      localStorage.setItem(storageKeys.MODE, viewMode);
       const now = new Date();
       const hh = String(now.getHours()).padStart(2, '0');
       const mm = String(now.getMinutes()).padStart(2, '0');
@@ -105,7 +125,7 @@ export default function App() {
     } catch {
       setLastSavedText('Local storage full');
     }
-  }, [title, content, theme, preferences, pinnedHeadings, viewMode]);
+  }, [title, content, theme, preferences, pinnedHeadings, viewMode, storageKeys]);
 
   useEffect(() => {
     if (viewMode !== 'read' || toc.length === 0) return;

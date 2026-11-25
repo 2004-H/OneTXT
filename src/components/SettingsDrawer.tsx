@@ -29,7 +29,7 @@ import {
 } from '../types/onetxt';
 import { copyToClipboard, downloadFile } from '../utils/clipboard';
 import { generateThemeCss } from '../utils/cssGenerator';
-import { buildStandaloneOneTxtHtml } from '../utils/standaloneHtml';
+import { exportFullStandaloneOneTxtHtml } from '../utils/standaloneHtml';
 
 interface SettingsDrawerProps {
   open: boolean;
@@ -258,16 +258,20 @@ export function SettingsDrawer({
     notify('ok', `Downloaded ${safeSlug}-full-backup.json`);
   };
 
-  const handleExportStandaloneHtml = () => {
-    const html = buildStandaloneOneTxtHtml({
-      title,
-      content,
-      theme,
-      preferences,
-      pinnedHeadings,
-    });
-    downloadFile('OneTXT.html', html, 'text/html;charset=utf-8');
-    notify('ok', 'Downloaded self-contained OneTXT.html');
+  const handleExportStandaloneHtml = async () => {
+    try {
+      const html = await exportFullStandaloneOneTxtHtml({
+        title,
+        content,
+        theme,
+        preferences,
+        pinnedHeadings,
+      });
+      downloadFile('OneTXT.html', html, 'text/html;charset=utf-8');
+      notify('ok', 'Downloaded full self-contained OneTXT.html');
+    } catch {
+      notify('err', 'Could not export OneTXT.html');
+    }
   };
 
   const handleImportTextFile = (e: ChangeEvent<HTMLInputElement>) => {
